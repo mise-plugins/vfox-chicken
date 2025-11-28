@@ -1,0 +1,36 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-13]  # macos-13 is x86_64, macos-latest is arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Test plugin
+        run: |
+          mise plugin install chicken https://github.com/${{ github.repository }}.git
+          mise list-all chicken | head -5
+          mise install chicken@5.4.0
+          mise exec chicken@5.4.0 -- csi -version
+
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: ./test/run.sh
